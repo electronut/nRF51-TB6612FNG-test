@@ -106,19 +106,6 @@ void init_motors(void)
   nrf_gpio_cfg_output(BIN1);
   nrf_gpio_cfg_output(BIN2);
 }
-// Function for initializing services that will be used by the application.
-void services_init()
-{
-    uint32_t       err_code;
-    ble_nus_init_t nus_init;
-    
-    memset(&nus_init, 0, sizeof(nus_init));
-
-    nus_init.data_handler = nus_data_handler;
-    
-    err_code = ble_nus_init(&m_nus, &nus_init);
-    APP_ERROR_CHECK(err_code);
-}
 
 /* brake: sudden stop of both motors */
 void brake()
@@ -135,6 +122,8 @@ void stop_motors()
 /* set_speed: set speed for both motors */
 void set_speed(uint8_t speed)
 {
+  nrf_gpio_pin_set(STBY);
+
   // set speed
   while (app_pwm_channel_duty_set(&PWM1, 0, speed) == NRF_ERROR_BUSY);
   while (app_pwm_channel_duty_set(&PWM1, 1, speed) == NRF_ERROR_BUSY);      
@@ -145,21 +134,36 @@ void set_dir(bool forward)
 {
   if(forward) {
     // set direction A
-    nrf_gpio_pin_set(pinIN1);
-    nrf_gpio_pin_clear(pinIN2);
+    nrf_gpio_pin_set(AIN1);
+    nrf_gpio_pin_clear(AIN2);
     // set direction B
-    nrf_gpio_pin_set(pinIN3);
-    nrf_gpio_pin_clear(pinIN4);
+    nrf_gpio_pin_set(BIN1);
+    nrf_gpio_pin_clear(BIN2);
   }
   else {
      // set direction A
-    nrf_gpio_pin_clear(pinIN1);
-    nrf_gpio_pin_set(pinIN2);
+    nrf_gpio_pin_clear(AIN1);
+    nrf_gpio_pin_set(AIN2);
     // set direction B
-    nrf_gpio_pin_clear(pinIN3);
-    nrf_gpio_pin_set(pinIN4);
+    nrf_gpio_pin_clear(BIN1);
+    nrf_gpio_pin_set(BIN2);
   }
 }
+
+// Function for initializing services that will be used by the application.
+void services_init()
+{
+    uint32_t       err_code;
+    ble_nus_init_t nus_init;
+    
+    memset(&nus_init, 0, sizeof(nus_init));
+
+    nus_init.data_handler = nus_data_handler;
+    
+    err_code = ble_nus_init(&m_nus, &nus_init);
+    APP_ERROR_CHECK(err_code);
+}
+
 
 #define APP_TIMER_PRESCALER  0    /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS 6    /**< Maximum number of simultaneously created timers. */
@@ -231,7 +235,10 @@ int main(void)
         set_speed(i*10);
         nrf_delay_ms(1000);
       }
-      
+
+      stop_motors();
+      nrf_delay_ms(1000);
+
       for (int i = 9; i > 0; i--) {
 
         set_speed(i*10);
