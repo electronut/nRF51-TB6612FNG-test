@@ -35,41 +35,12 @@ APP_PWM_INSTANCE(PWM1,1);
 #define RECORD "Rec"
 #define SHUFFLE "Shuffle"
 
-// flip directions
-bool flipA = false;
-bool flipB = false;
-
 // min/max motos speeds - PWM duty cycle
 const uint32_t speedMin = 90;
 const uint32_t speedMax = 90;
 // current motor speeds
 uint32_t speedA = 90;
 uint32_t speedB = 90;
-
-bool stopMotors = false;
-
-bool changed = false;
-
-// Function for handling the data from the Nordic UART Service.
-static void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data, 
-                             uint16_t length)
-{
-  if (strstr((char*)(p_data), RECORD)) {
-    flipA = !flipA;
-  }
-  else if (strstr((char*)(p_data), SHUFFLE)) {
-    flipB = !flipB;
-  }
-  else if (strstr((char*)(p_data), STOP)) {
-    stopMotors = true;
-  }
-  else if (strstr((char*)(p_data), PLAY)) {
-    stopMotors = false;
-  }
-  
-  // set changed flag
-  changed = true;
-}
 
 
 // A flag indicating PWM status.
@@ -119,11 +90,15 @@ void stop_motors()
   nrf_gpio_pin_clear(STBY);
 }
 
+/* start_motors: start motors */
+void start_motors()
+{
+  nrf_gpio_pin_set(STBY);
+}
+
 /* set_speed: set speed for both motors */
 void set_speed(uint8_t speed)
 {
-  nrf_gpio_pin_set(STBY);
-
   // set speed
   while (app_pwm_channel_duty_set(&PWM1, 0, speed) == NRF_ERROR_BUSY);
   while (app_pwm_channel_duty_set(&PWM1, 1, speed) == NRF_ERROR_BUSY);      
@@ -147,6 +122,22 @@ void set_dir(bool forward)
     // set direction B
     nrf_gpio_pin_clear(BIN1);
     nrf_gpio_pin_set(BIN2);
+  }
+}
+
+// Function for handling the data from the Nordic UART Service.
+static void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data, 
+                             uint16_t length)
+{
+  if (strstr((char*)(p_data), RECORD)) {
+  }
+  else if (strstr((char*)(p_data), SHUFFLE)) {
+  }
+  else if (strstr((char*)(p_data), STOP)) {
+    stop_motors();
+  }
+  else if (strstr((char*)(p_data), PLAY)) {
+    start_motors();
   }
 }
 
@@ -227,25 +218,11 @@ int main(void)
 
     set_speed(50);
 
+    start_motors();
+
     printf("entering loop\n");
     while(1) {
-
-      for (int i = 1; i < 10; i++) {
-
-        set_speed(i*10);
-        nrf_delay_ms(1000);
-      }
-
-      stop_motors();
-      nrf_delay_ms(1000);
-
-      for (int i = 9; i > 0; i--) {
-
-        set_speed(i*10);
-        nrf_delay_ms(1000);
-      }
-
-      // delay
-      nrf_delay_ms(2000);
+      //
+      nrf_delay_ms(50);
     }
 }
