@@ -42,6 +42,7 @@ const uint32_t speedMax = 90;
 uint32_t speedA = 90;
 uint32_t speedB = 90;
 
+bool forward = true;
 
 // A flag indicating PWM status.
 static volatile bool pwmReady = false;            
@@ -132,6 +133,8 @@ static void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data,
   if (strstr((char*)(p_data), RECORD)) {
   }
   else if (strstr((char*)(p_data), SHUFFLE)) {
+    forward = !forward;
+    set_dir(forward);
   }
   else if (strstr((char*)(p_data), STOP)) {
     stop_motors();
@@ -218,7 +221,7 @@ int main(void)
 
     set_speed(50);
 
-    start_motors();
+    //start_motors();
 
     printf("entering loop\n");
     while(1) {
