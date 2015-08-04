@@ -1,0 +1,30 @@
+#include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
+#include "nordic_common.h"
+#include "nrf.h"
+#include "nrf_gpiote.h"
+#include "nrf_gpio.h"
+#include "nrf_drv_gpiote.h"
+#include "nrf51_bitfields.h"
+#include "nrf_delay.h"
+#include "ble_hci.h"
+#include "ble_advdata.h"
+#include "ble_advertising.h"
+#include "ble_conn_params.h"
+#include "ble_nus.h"
+#include "softdevice_handler.h"
+#include "app_timer.h"
+#include "app_pwm.h"
+#include "app_uart.h"
+#include "app_util_platform.h"
+#include "boards.h"
+#include "pstorage.h"
+#include "pstorage_platform.h"
+
+void gap_params_init(void);
+void ble_stack_init();
+void advertising_init();
+void conn_params_init();
+void uart_init();
+
