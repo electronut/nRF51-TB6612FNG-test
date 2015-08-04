@@ -43,7 +43,10 @@ uint32_t speedA = 90;
 uint32_t speedB = 90;
 
 bool forward = true;
+uint8_t curr_speed = 50;
 
+bool turn_left = false;
+bool turn_right = false;
 // A flag indicating PWM status.
 static volatile bool pwmReady = false;            
 
@@ -100,6 +103,7 @@ void start_motors()
 /* set_speed: set speed for both motors */
 void set_speed(uint8_t speed)
 {
+  curr_speed = speed;
   // set speed
   while (app_pwm_channel_duty_set(&PWM1, 0, speed) == NRF_ERROR_BUSY);
   while (app_pwm_channel_duty_set(&PWM1, 1, speed) == NRF_ERROR_BUSY);      
@@ -126,6 +130,28 @@ void set_dir(bool forward)
   }
 }
 
+/* turn: turn left/right */
+void turn(bool left) 
+{
+  // store current speed
+  uint8_t tmp = curr_speed;
+
+  if (left) {
+    while (app_pwm_channel_duty_set(&PWM1, 0, 10) == NRF_ERROR_BUSY);
+    while (app_pwm_channel_duty_set(&PWM1, 1, 25) == NRF_ERROR_BUSY);
+  }
+  else {
+    while (app_pwm_channel_duty_set(&PWM1, 0, 25) == NRF_ERROR_BUSY);
+    while (app_pwm_channel_duty_set(&PWM1, 1, 10) == NRF_ERROR_BUSY);
+  }
+
+  // turn for x secs
+  nrf_delay_ms(1000);
+
+  // restore speed
+  set_speed(tmp);
+}
+
 // Function for handling the data from the Nordic UART Service.
 static void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data, 
                              uint16_t length)
@@ -141,6 +167,12 @@ static void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data,
   }
   else if (strstr((char*)(p_data), PLAY)) {
     start_motors();
+  }
+  else if (strstr((char*)(p_data), FORWARD)) {
+    turn_right = true;
+  }
+  else if (strstr((char*)(p_data), REWIND)) {
+    turn_left = true;
   }
 }
 
@@ -222,9 +254,19 @@ int main(void)
     set_speed(50);
 
     //start_motors();
-
+    
     printf("entering loop\n");
     while(1) {
+
+      if(turn_left) {
+        turn(true);
+        turn_left = false;
+      }
+      else if(turn_right) {
+        turn(false);
+        turn_right = false;
+      }
+
       //
       nrf_delay_ms(50);
     }
