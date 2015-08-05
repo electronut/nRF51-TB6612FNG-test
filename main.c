@@ -82,12 +82,6 @@ void init_motors(void)
   nrf_gpio_cfg_output(BIN2);
 }
 
-/* brake: sudden stop of both motors */
-void brake()
-{
-
-}
-
 /* stop_motors: bring motors to a stop */
 void stop_motors()
 {
@@ -228,36 +222,31 @@ int main(void)
     // prints to serial port
     printf("starting...\n");
 
+    // intitialize motors
     init_motors();
 
     // set direction
     set_dir(true);
 
-    // 2-channel PWM
+    // 2-channel PWM - 1000 Hz (1000 us)
     app_pwm_config_t pwm1_cfg = 
       APP_PWM_DEFAULT_CONFIG_2CH(1000L, PWMA, PWMB);
 
     pwm1_cfg.pin_polarity[0] = APP_PWM_POLARITY_ACTIVE_HIGH;
     pwm1_cfg.pin_polarity[1] = APP_PWM_POLARITY_ACTIVE_HIGH;
 
-    printf("before pwm init\n");
     /* Initialize and enable PWM. */
     err_code = app_pwm_init(&PWM1,&pwm1_cfg,pwm_ready_callback);
     APP_ERROR_CHECK(err_code);
-    printf("after pwm init\n");
-
     app_pwm_enable(&PWM1);
 
-    // wait till PWM is ready
-    //while(!pwmReady);
+    // set speed
+    set_speed(75);
 
-    set_speed(50);
-
-    //start_motors();
-    
-    printf("entering loop\n");
+    // loop 
     while(1) {
 
+      // execute turn if flag set
       if(turn_left) {
         turn(true);
         turn_left = false;
@@ -267,7 +256,7 @@ int main(void)
         turn_right = false;
       }
 
-      //
+      // short delay
       nrf_delay_ms(50);
     }
 }
